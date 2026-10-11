@@ -86,7 +86,7 @@
 
   <div class="feld">
     <span class="titel">Bild zum Wort</span>
-    <p class="hinweis">Vorschlag übernehmen oder per Emoji-Tastatur ändern. Leer lassen = kein Bild.</p>
+    <p class="hinweis">Optional: Emoji per Emoji-Tastatur eintragen. Leer = kein Bild.</p>
     <div class="bilder" id="bilder"></div>
   </div>
 
@@ -120,7 +120,7 @@
     <div class="knoepfe" style="margin-top:12px">
       <button class="gross zweit" id="b-index">⬇ index.html herunterladen</button>
     </div>
-    <p class="hinweis">Lade index.html bei GitHub Pages hoch: einmalig und immer dann, wenn diese Erstell-Datei aktualisiert wurde (Version <span id="version"></span>).</p>
+    <p class="hinweis">Lade index.html bei GitHub Pages hoch: einmalig und immer dann, wenn diese Erstell-Datei aktualisiert wurde (Stand <span id="version"></span>).</p>
     <p class="erfolg" id="erfolg" hidden></p>
   </details>
 </main>
@@ -154,13 +154,11 @@
    Gemeinsamer Kern für Erstell-Datei und Kinder-Datei
    ========================================================= */
 
-const FARBE_VOKAL = "#d62828";
-const FARBE_KONSONANT = "#1d4fb8";
+const FARBE_SCHRIFT = "#1f1f1f";   // alle Buchstaben einfarbig
 
 /* Lauteinheiten: längste zuerst (Spezifikation A6) */
 const EINHEITEN = ["sch", "ch", "ck", "ei", "ai", "au", "eu", "äu", "ie", "qu", "ng", "nk", "pf", "sp", "st"]
   .sort((a, b) => b.length - a.length);
-const VOKALE = new Set(["a", "e", "i", "o", "u", "ä", "ö", "ü", "y", "ei", "ai", "au", "eu", "äu", "ie"]);
 
 /* Themen-Pakete (Spezifikation 6.4) */
 /* Verkleidung: Emoji an Tonis Kopf, Hals oder Hand (Gesicht bleibt frei) */
@@ -173,92 +171,78 @@ const ORTE = {
 const THEMEN = {
   wiese: {
     name: "Wiese (wie bisher)", hintergrund: "#8cc66b", rutsche: "rot", gras: [[0, 900, 420], [1450, 30, 330]],
-    deko: [], verkleidung: null, jubel: ["🌼", "🌷", "🌼", "🐞"],
+    deko: [], verkleidung: null,
   },
   herbst: {
     name: "Herbst", hintergrund: "#f1d6a0", rutsche: "rot", gras: [[0, 900, 420]],
     deko: [["🍂", 1700, 140, 110], ["🍁", 1840, 260, 80], ["🌰", 540, 1010, 70], ["🍁", 1330, 120, 70]],
-    verkleidung: { zeichen: "🧣", ort: "hals" }, jubel: ["🍁", "🍂", "🌰", "🍎"],
+    verkleidung: { zeichen: "🧣", ort: "hals" },
   },
   halloween: {
     name: "Halloween", hintergrund: "#45325e", rutsche: "gruen", gras: [],
     deko: [["🌕", 1780, 150, 150], ["🦇", 1520, 110, 80], ["🎃", 520, 1030, 110], ["🕸️", 1300, 110, 90]],
-    verkleidung: { zeichen: "🎩", ort: "kopf" }, jubel: ["🎃", "👻", "🦇", "🍬"],
+    verkleidung: { zeichen: "🎩", ort: "kopf" },
   },
   winter: {
     name: "Winter", hintergrund: "#dbeaf5", rutsche: "rot", gras: [],
     deko: [["⛄", 1780, 190, 150], ["❄️", 1320, 110, 80], ["❄️", 1560, 230, 60], ["❄️", 560, 1010, 60]],
-    verkleidung: { zeichen: "🧣", ort: "hals" }, jubel: ["⛄", "❄️", "🛷", "⛸️"],
+    verkleidung: { zeichen: "🧣", ort: "hals" },
   },
   regenwetter: {
     name: "Regenwetter", hintergrund: "#b9c6d2", rutsche: "gelb", gras: [[0, 900, 420]],
     deko: [["☁️", 1720, 120, 150], ["🌧️", 1380, 130, 110], ["💧", 1560, 270, 50], ["🐌", 560, 1020, 70]],
-    verkleidung: { zeichen: "☂️", ort: "hand" }, jubel: ["🌈", "☔", "🐸", "💧"],
+    verkleidung: { zeichen: "☂️", ort: "hand" },
   },
   wald: {
     name: "Wald", hintergrund: "#a8cf8e", rutsche: "rot", gras: [[0, 900, 420]],
     deko: [["🌲", 1780, 190, 170], ["🌳", 1520, 150, 130], ["🦊", 1290, 200, 80], ["🍄", 560, 1010, 70]],
-    verkleidung: { zeichen: "🍄", ort: "kopf" }, jubel: ["🌲", "🦊", "🍄", "🦉"],
+    verkleidung: { zeichen: "🍄", ort: "kopf" },
   },
   igel: {
     name: "Igel", hintergrund: "#e8cfa0", rutsche: "gruen", gras: [[0, 900, 420]],
     deko: [["🦔", 1780, 200, 140], ["🍂", 1500, 130, 100], ["🍁", 1320, 110, 70], ["🍄", 560, 1010, 70]],
-    verkleidung: { zeichen: "🦔", ort: "hand" }, jubel: ["🦔", "🍂", "🍁", "🌰"],
+    verkleidung: { zeichen: "🦔", ort: "hand" },
   },
   apfel: {
     name: "Apfel", hintergrund: "#fbe3d0", rutsche: "gruen", gras: [[0, 900, 420]],
     deko: [["🌳", 1780, 190, 170], ["🍎", 1500, 130, 90], ["🍏", 1320, 110, 70], ["🍎", 560, 1015, 60]],
-    verkleidung: { zeichen: "🍎", ort: "kopf" }, jubel: ["🍎", "🍏", "🍐", "🧺"],
+    verkleidung: { zeichen: "🍎", ort: "kopf" },
   },
   weihnachten: {
     name: "Weihnachten", hintergrund: "#1f4d3a", rutsche: "rot", gras: [],
     deko: [["🎄", 1780, 190, 170], ["⭐", 1480, 110, 80], ["✨", 1320, 200, 60], ["🎁", 560, 1010, 90]],
-    verkleidung: { zeichen: "🎁", ort: "hand" }, jubel: ["🎄", "🎁", "⭐", "🔔"],
+    verkleidung: { zeichen: "🎁", ort: "hand" },
   },
   nikolaus: {
     name: "Nikolaus", hintergrund: "#8e2b2b", rutsche: "gelb", gras: [],
     deko: [["👢", 1780, 180, 140], ["🍊", 1480, 120, 80], ["🥜", 1320, 200, 60], ["🍫", 560, 1010, 80]],
-    verkleidung: { zeichen: "👢", ort: "hand" }, jubel: ["🍊", "🍫", "🥜", "⭐"],
+    verkleidung: { zeichen: "👢", ort: "hand" },
   },
   sanktmartin: {
     name: "Sankt Martin", hintergrund: "#2c3e66", rutsche: "gelb", gras: [],
     deko: [["🌙", 1780, 140, 130], ["🏮", 1480, 150, 100], ["⭐", 1320, 90, 60], ["🐴", 560, 1010, 90]],
-    verkleidung: { zeichen: "🏮", ort: "hand" }, jubel: ["🏮", "🌙", "⭐", "🥨"],
+    verkleidung: { zeichen: "🏮", ort: "hand" },
   },
   advent: {
     name: "Advent", hintergrund: "#2f4f4f", rutsche: "rot", gras: [],
     deko: [["🕯️", 1700, 170, 120], ["🕯️", 1830, 200, 90], ["⭐", 1460, 110, 70], ["🍪", 560, 1010, 80]],
-    verkleidung: { zeichen: "🕯️", ort: "hand" }, jubel: ["🕯️", "⭐", "🍪", "🎄"],
+    verkleidung: { zeichen: "🕯️", ort: "hand" },
   },
   bauernhof: {
     name: "Bauernhof", hintergrund: "#cfe7a6", rutsche: "rot", gras: [[0, 900, 420], [1450, 30, 330]],
     deko: [["🐄", 1780, 230, 140], ["🐔", 1300, 130, 80], ["🚜", 560, 1000, 100]],
-    verkleidung: { zeichen: "👒", ort: "kopf" }, jubel: ["🐄", "🐷", "🐔", "🐑"],
+    verkleidung: { zeichen: "👒", ort: "kopf" },
   },
   schule: {
     name: "Schule", hintergrund: "#f5f0dc", rutsche: "gelb", gras: [[0, 900, 420]],
     deko: [["🏫", 1780, 190, 150], ["🔤", 1480, 120, 80], ["📐", 1320, 210, 60], ["🎨", 560, 1010, 80]],
-    verkleidung: { zeichen: "🎒", ort: "hand" }, jubel: ["🏫", "🔤", "🎨", "🎉"],
+    verkleidung: { zeichen: "🎒", ort: "hand" },
   },
   sport: {
     name: "Sport", hintergrund: "#cde8f2", rutsche: "rot", gras: [[0, 900, 420]],
     deko: [["⚽", 1780, 170, 110], ["🏀", 1520, 120, 80], ["🏃", 1320, 210, 80], ["🥇", 560, 1010, 80]],
-    verkleidung: { zeichen: "🧢", ort: "kopf" }, jubel: ["🥇", "⚽", "🏀", "🏆"],
+    verkleidung: { zeichen: "🧢", ort: "kopf" },
   },
-};
-
-/* Bild-Vorschläge zu häufigen Fibelwörtern */
-const BILDER = {
-  lama:"🦙", oma:"👵", opa:"👴", mama:"👩", papa:"👨", lea:"👧", lola:"👧", mia:"👧", lisa:"👧", ella:"👧",
-  leo:"👦", ole:"👦", timo:"👦", tim:"👦", emil:"👦", limo:"🥤", eis:"🍦", ei:"🥚", igel:"🦔", maus:"🐭",
-  nase:"👃", sofa:"🛋️", mond:"🌙", sonne:"☀️", rose:"🌹", hose:"👖", esel:"🫏", ast:"🌿", lupe:"🔍",
-  melone:"🍉", nuss:"🌰", tomate:"🍅", auto:"🚗", baum:"🌳", ball:"⚽", blatt:"🍁", kürbis:"🎃",
-  apfel:"🍎", hut:"🎩", hund:"🐶", katze:"🐱", fisch:"🐟", haus:"🏠", uhr:"⏰", pilz:"🍄", rabe:"🐦‍⬛",
-  laterne:"🏮", dino:"🦕", wal:"🐳", lampe:"💡", ente:"🦆", eule:"🦉", rad:"🚲", regen:"🌧️",
-  schnee:"❄️", wolke:"☁️", blume:"🌸", eimer:"🪣", mais:"🌽", birne:"🍐", kerze:"🕯️", geist:"👻",
-  hexe:"🧙‍♀️", besen:"🧹", spinne:"🕷️", mütze:"🧢", salami:"🍕", tal:"⛰️", mai:"🌷",
-  wolle:"🧶", rakete:"🚀", tasse:"☕", mumie:"🧟", nest:"🪺", seil:"🪢", see:"🏞️", schal:"🧣",
-  sterne:"⭐", stern:"⭐", fuchs:"🦊", reh:"🦌", affe:"🐒", löwe:"🦁", kuh:"🐄",
 };
 
 function zerlegen(wort) {
@@ -273,18 +257,15 @@ function zerlegen(wort) {
   }
   return teile;
 }
-const farbe = einheit => VOKALE.has(einheit.toLowerCase()) ? FARBE_VOKAL : FARBE_KONSONANT;
 
 /* Übung <-> Link (der Teil nach dem #)
-   Beispiel: v=1&t=herbst&p=0.5&s=Mo,La&w=Lama,Oma,Igel:🦔,am:
-   "Wort" = Bild-Vorschlag, "Wort:X" = eigenes Bild X, "Wort:" = kein Bild */
-const VERSION = 2;
+   Beispiel: v=3&t=herbst&p=0.5&s=Mo,La&w=Lama:🦙,Oma,Igel:🦔
+   "Wort" = kein Bild, "Wort:X" = Bild X */
+const VERSION = 3;                 // Link-Format
+const STAND = "2026-10-11.4";      // Stand der App – bei jeder Änderung erhöhen
 function zuLink(d) {
   const kodiere = t => encodeURIComponent(t).replace(/%2C/g, ",").replace(/%3A/g, ":");
-  const woerter = d.woerter.map(({ w, bild }) => {
-    const vorschlag = BILDER[w.toLowerCase()] || "";
-    return bild === vorschlag ? w : `${w}:${bild}`;
-  });
+  const woerter = d.woerter.map(({ w, bild }) => bild ? `${w}:${bild}` : w);
   return [`v=${VERSION}`, `t=${d.thema}`, `p=${d.pause}`, `s=${kodiere(d.silben.join(","))}`, `w=${kodiere(woerter.join(","))}`].join("&");
 }
 function ausLink(hash) {
@@ -302,7 +283,7 @@ function ausLink(hash) {
     silben: liste(teile.s),
     woerter: liste(teile.w).map(e => {
       const i = e.indexOf(":");
-      if (i < 0) return { w: e, bild: BILDER[e.toLowerCase()] || "" };
+      if (i < 0) return { w: e, bild: "" };
       return { w: e.slice(0, i), bild: e.slice(i + 1) };
     }),
   };
@@ -332,7 +313,7 @@ function uebung() {
   return {
     thema: eingaben.thema.value,
     silben: zeilen(eingaben.silben.value),
-    woerter: zeilen(eingaben.woerter.value).map(w => ({ w, bild: w in bildWahl ? bildWahl[w] : (BILDER[w.toLowerCase()] || "") })),
+    woerter: zeilen(eingaben.woerter.value).map(w => ({ w, bild: bildWahl[w] || "" })),
     pause: parseFloat(document.querySelector("input[name=pause]:checked").value),
   };
 }
@@ -472,7 +453,7 @@ $("qr-png").addEventListener("click", () => {
 });
 
 /* index.html für GitHub Pages */
-$("version").textContent = VERSION;
+$("version").textContent = STAND;
 $("adresse").addEventListener("input", speichern);
 $("b-index").addEventListener("click", () => {
   herunterladen("index.html", kinderDatei(null), "text/html");
@@ -768,14 +749,12 @@ function lesenSymbol() {
   emoji("👓", cx, cy - 22, 50, svg);
 }
 
-/* Weiter-Knopf: Stift + Pfeil = „ins Heft schreiben, dann weiter“ (bei Silben nur Pfeil) */
-function weiterKnopf(eltern, mitStift) {
+/* Weiter-Knopf: Pfeil zum nächsten Wort (erst nach dem Abschreiben antippen) */
+function weiterKnopf(eltern) {
   const g = el("g", { class: "knopf pochen" }, eltern);
-  const x = 1620, y = 545, b = 260, h = 150;
-  el("rect", { x, y, width: b, height: h, rx: h / 2, fill: "#fff", stroke: "#2f7d32", "stroke-width": 8 }, g);
-  const pfeilX = mitStift ? x + 150 : x + 95;
-  el("path", { d: `M${pfeilX},${y + 75} h55 m-28,-32 l32,32 l-32,32`, fill: "none", stroke: "#2f7d32", "stroke-width": 16, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
-  if (mitStift) emoji("✏️", x + 82, y + 78, 90, g);
+  const cx = 1760, cy = 620, r = 85;
+  el("circle", { cx, cy, r, fill: "#fff", stroke: "#2f7d32", "stroke-width": 8 }, g);
+  el("path", { d: `M${cx - 38},${cy} h70 m-32,-36 l36,36 l-36,36`, fill: "none", stroke: "#2f7d32", "stroke-width": 16, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
   g.addEventListener("click", e => { e.stopPropagation(); naechste(); });
 }
 
@@ -789,7 +768,7 @@ async function eintragStarten() {
 
   for (const z of sz.ziele) {
     const t = el("text", {
-      x: 0, y: 0, "font-size": sz.L.groesse, "font-family": SCHRIFT, fill: farbe(z.e), class: "buchstabe",
+      x: 0, y: 0, "font-size": sz.L.groesse, "font-family": SCHRIFT, fill: FARBE_SCHRIFT, class: "buchstabe",
       "text-anchor": "middle", transform: `translate(${START.x},${START.y})`, opacity: 0,
     }, sz.ebene);
     t.textContent = z.e;
@@ -815,8 +794,8 @@ async function eintragStarten() {
 
 /* Spezifikation A7: Bild zum Wort + Toni mit Stift + Weiter-Knopf zum Bestätigen */
 function wortEnde(sz) {
-  if (sz.art === "silbe") return weiterKnopf(sz.endEbene, false);
-  weiterKnopf(sz.endEbene, true);
+  weiterKnopf(sz.endEbene);
+  if (sz.art === "silbe") return;
   if (sz.bild) {
     const b = emoji(sz.bild, 1420, 400, 280, sz.endEbene, { opacity: 0 });
     animiere(400, p => b.setAttribute("opacity", p), lauf);
@@ -835,8 +814,7 @@ function abschlussZeichnen() {
   const n = woerter.length;
   const wortSchreiben = (w, x, y, groesse, maxBreite) => {
     const g = Math.min(groesse, groesse * maxBreite / breite(w, groesse));
-    const t = el("text", { x, y: y + g * 0.3, "font-size": g, "font-family": SCHRIFT, "text-anchor": "middle", class: "buchstabe" }, svg);
-    for (const e of zerlegen(w)) el("tspan", { fill: farbe(e) }, t).textContent = e;
+    el("text", { x, y: y + g * 0.3, "font-size": g, "font-family": SCHRIFT, fill: FARBE_SCHRIFT, "text-anchor": "middle", class: "buchstabe" }, svg).textContent = w;
   };
   if (n <= 14) {
     // bis 14 Wörter: im Kreis um Toni
@@ -855,8 +833,6 @@ function abschlussZeichnen() {
       wortSchreiben(w, spalten[spalte], 60 + abstand * (zeile + 0.5), Math.min(78, abstand * 0.7), 330);
     });
   }
-  thema.jubel.forEach((z, i) =>
-    emoji(z, 960 + (i % 2 ? 1 : -1) * 330, 400 + 200 * Math.floor(i / 2), 80, svg, { class: "wackeln" }));
 }
 
 /* Bedienung: Tippen startet; weiter geht es nur über den Weiter-Knopf (nach dem Abschreiben) */
@@ -878,6 +854,22 @@ window.addEventListener("message", e => {
   if (befehl === "ende") { index = szenen.length - 1; szeneZeigen(false); }
 });
 window.addEventListener("hashchange", () => location.reload());   // neuer QR-Code im selben Tab
+
+/* Update-Prüfung: Liegt online ein neuerer Stand, einmal neu laden.
+   Wichtig für das Icon auf dem Home-Bildschirm, das sonst lange den alten Stand zeigt. */
+async function aufUpdatePruefen() {
+  if (UEBUNG || !/^https?:/.test(location.protocol)) return;   // nicht in der Vorschau / lokal
+  try {
+    const antwort = await fetch(location.href.split("#")[0], { cache: "reload" });
+    const online = ((await antwort.text()).match(/const STAND = "([^"]+)"/) || [])[1];
+    if (!online || online === STAND) return;
+    if (sessionStorage.getItem("leserutsche-neu") === online) return;   // keine Endlosschleife
+    sessionStorage.setItem("leserutsche-neu", online);
+    location.reload();
+  } catch (e) {}
+}
+aufUpdatePruefen();
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") aufUpdatePruefen(); });
 document.addEventListener("keydown", e => {
   if (e.key === " " || e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); weiter(); }
   if (e.key === "ArrowLeft" && index > 0) { index--; szeneZeigen(false); }
