@@ -157,11 +157,11 @@ function zerlegen(wort) {
    Beispiel: v=3&t=herbst&p=0.5&s=Mo,La&w=Lama:🦙,Oma,Igel:🦔
    "Wort" = kein Bild, "Wort:X" = Bild X */
 const VERSION = 3;                 // Link-Format
-const STAND = "2026-10-11.4";      // Stand der App – bei jeder Änderung erhöhen
+const STAND = "2026-10-11.5";      // Stand der App – bei jeder Änderung erhöhen
 function zuLink(d) {
   const kodiere = t => encodeURIComponent(t).replace(/%2C/g, ",").replace(/%3A/g, ":");
   const woerter = d.woerter.map(({ w, bild }) => bild ? `${w}:${bild}` : w);
-  return [`v=${VERSION}`, `t=${d.thema}`, `p=${d.pause}`, `s=${kodiere(d.silben.join(","))}`, `w=${kodiere(woerter.join(","))}`].join("&");
+  return [`v=${VERSION}`, `t=${d.thema}`, `p=${d.pause}`, `a=${d.abschreiben}`, `s=${kodiere(d.silben.join(","))}`, `w=${kodiere(woerter.join(","))}`].join("&");
 }
 function ausLink(hash) {
   const teile = {};
@@ -175,6 +175,7 @@ function ausLink(hash) {
     version: parseInt(teile.v, 10) || 1,
     thema: teile.t in THEMEN ? teile.t : "wiese",
     pause: parseFloat(teile.p) || 0,
+    abschreiben: parseFloat(teile.a) || 0,
     silben: liste(teile.s),
     woerter: liste(teile.w).map(e => {
       const i = e.indexOf(":");
@@ -438,14 +439,18 @@ async function eintragStarten() {
 }
 
 /* Spezifikation A7: Bild zum Wort + Toni mit Stift + Weiter-Knopf zum Bestätigen */
-function wortEnde(sz) {
-  weiterKnopf(sz.endEbene);
-  if (sz.art === "silbe") return;
+async function wortEnde(sz) {
+  if (sz.art === "silbe") return weiterKnopf(sz.endEbene);   // Silben: kein Abschreiben, Pfeil sofort
   if (sz.bild) {
     const b = emoji(sz.bild, 1420, 400, 280, sz.endEbene, { opacity: 0 });
     animiere(400, p => b.setAttribute("opacity", p), lauf);
   }
+  // erst der Stift (abschreiben) …
   emoji("✏️", TONI.x + TONI.b + 5, TONI.y + TONI.h * 0.55, 110, sz.endEbene, { class: "wackeln" });
+  // … nach der Abschreibzeit der Pfeil zum Weitergehen
+  const meinLauf = lauf;
+  await warte((daten.abschreiben || 0) * 1000);
+  if (meinLauf === lauf) weiterKnopf(sz.endEbene);
 }
 
 /* Spezifikation A10: Toni freut sich, alle Wörter um ihn herum */
