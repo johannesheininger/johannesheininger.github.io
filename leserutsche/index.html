@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="de">
 <head>
@@ -24,6 +23,9 @@
   .fortschritt { position: fixed; right: 16px; bottom: 18px; font-size: 1.1rem; color: rgba(255,255,255,.9); background: rgba(0,0,0,.25); padding: 4px 12px; border-radius: 99px; }
   .leer { color: #fff; font-size: 1.4rem; display: grid; place-items: center; height: 100%; text-align: center; padding: 16px; }
   .tippen-hinweis { animation: puls 1.6s ease-in-out infinite; }
+  .knopf { cursor: pointer; }
+  .pochen { animation: pochen 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+  @keyframes pochen { 50% { transform: scale(1.08); } }
   @keyframes puls { 50% { opacity: .35; } }
   .hopsen { animation: hops .7s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
   @keyframes hops { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-40px) rotate(4deg); } }
@@ -35,7 +37,6 @@
 <body>
 <svg id="buehne" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
 <div class="steuerung">
-  <button id="b-zurueck" title="Zurück">←</button>
   <button id="b-wieder" title="Nochmal">↺</button>
   <button id="b-vollbild" title="Vollbild">⛶</button>
 </div>
@@ -57,25 +58,87 @@ const EINHEITEN = ["sch", "ch", "ck", "ei", "ai", "au", "eu", "äu", "ie", "qu",
 const VOKALE = new Set(["a", "e", "i", "o", "u", "ä", "ö", "ü", "y", "ei", "ai", "au", "eu", "äu", "ie"]);
 
 /* Themen-Pakete (Spezifikation 6.4) */
+/* Verkleidung: Emoji an Tonis Kopf, Hals oder Hand (Gesicht bleibt frei) */
+const ORTE = {
+  kopf: { x: 0.45, y: -0.08, groesse: 0.42 },
+  hals: { x: 0.52, y: 0.70, groesse: 0.55 },
+  hand: { x: -0.02, y: 0.62, groesse: 0.45 },
+};
+/* Deko: [Emoji, x, y, Größe] – nur in freien Bereichen (oben rechts, unten links) */
 const THEMEN = {
   wiese: {
-    name: "Wiese (wie bisher)", hintergrund: "#8cc66b", rutsche: "rot",
-    gras: [[0, 900, 420], [1450, 30, 330]],
+    name: "Wiese (wie bisher)", hintergrund: "#8cc66b", rutsche: "rot", gras: [[0, 900, 420], [1450, 30, 330]],
     deko: [], verkleidung: null, jubel: ["🌼", "🌷", "🌼", "🐞"],
   },
   herbst: {
-    name: "Herbst", hintergrund: "#f1d6a0", rutsche: "rot",
-    gras: [[0, 900, 420]],
+    name: "Herbst", hintergrund: "#f1d6a0", rutsche: "rot", gras: [[0, 900, 420]],
     deko: [["🍂", 1700, 140, 110], ["🍁", 1840, 260, 80], ["🌰", 540, 1010, 70], ["🍁", 1330, 120, 70]],
-    verkleidung: { zeichen: "🧣", x: 0.52, y: 0.70, groesse: 0.55 },
-    jubel: ["🍁", "🍂", "🌰", "🍎"],
+    verkleidung: { zeichen: "🧣", ort: "hals" }, jubel: ["🍁", "🍂", "🌰", "🍎"],
   },
   halloween: {
-    name: "Halloween", hintergrund: "#45325e", rutsche: "gruen",
-    gras: [],
-    deko: [["🌕", 1780, 150, 150], ["🦇", 1520, 110, 80], ["🎃", 520, 1030, 110], ["🕸️", 60, 90, 120]],
-    verkleidung: { zeichen: "🎩", x: 0.45, y: -0.08, groesse: 0.42 },
-    jubel: ["🎃", "👻", "🦇", "🍬"],
+    name: "Halloween", hintergrund: "#45325e", rutsche: "gruen", gras: [],
+    deko: [["🌕", 1780, 150, 150], ["🦇", 1520, 110, 80], ["🎃", 520, 1030, 110], ["🕸️", 1300, 110, 90]],
+    verkleidung: { zeichen: "🎩", ort: "kopf" }, jubel: ["🎃", "👻", "🦇", "🍬"],
+  },
+  winter: {
+    name: "Winter", hintergrund: "#dbeaf5", rutsche: "rot", gras: [],
+    deko: [["⛄", 1780, 190, 150], ["❄️", 1320, 110, 80], ["❄️", 1560, 230, 60], ["❄️", 560, 1010, 60]],
+    verkleidung: { zeichen: "🧣", ort: "hals" }, jubel: ["⛄", "❄️", "🛷", "⛸️"],
+  },
+  regenwetter: {
+    name: "Regenwetter", hintergrund: "#b9c6d2", rutsche: "gelb", gras: [[0, 900, 420]],
+    deko: [["☁️", 1720, 120, 150], ["🌧️", 1380, 130, 110], ["💧", 1560, 270, 50], ["🐌", 560, 1020, 70]],
+    verkleidung: { zeichen: "☂️", ort: "hand" }, jubel: ["🌈", "☔", "🐸", "💧"],
+  },
+  wald: {
+    name: "Wald", hintergrund: "#a8cf8e", rutsche: "rot", gras: [[0, 900, 420]],
+    deko: [["🌲", 1780, 190, 170], ["🌳", 1520, 150, 130], ["🦊", 1290, 200, 80], ["🍄", 560, 1010, 70]],
+    verkleidung: { zeichen: "🍄", ort: "kopf" }, jubel: ["🌲", "🦊", "🍄", "🦉"],
+  },
+  igel: {
+    name: "Igel", hintergrund: "#e8cfa0", rutsche: "gruen", gras: [[0, 900, 420]],
+    deko: [["🦔", 1780, 200, 140], ["🍂", 1500, 130, 100], ["🍁", 1320, 110, 70], ["🍄", 560, 1010, 70]],
+    verkleidung: { zeichen: "🦔", ort: "hand" }, jubel: ["🦔", "🍂", "🍁", "🌰"],
+  },
+  apfel: {
+    name: "Apfel", hintergrund: "#fbe3d0", rutsche: "gruen", gras: [[0, 900, 420]],
+    deko: [["🌳", 1780, 190, 170], ["🍎", 1500, 130, 90], ["🍏", 1320, 110, 70], ["🍎", 560, 1015, 60]],
+    verkleidung: { zeichen: "🍎", ort: "kopf" }, jubel: ["🍎", "🍏", "🍐", "🧺"],
+  },
+  weihnachten: {
+    name: "Weihnachten", hintergrund: "#1f4d3a", rutsche: "rot", gras: [],
+    deko: [["🎄", 1780, 190, 170], ["⭐", 1480, 110, 80], ["✨", 1320, 200, 60], ["🎁", 560, 1010, 90]],
+    verkleidung: { zeichen: "🎁", ort: "hand" }, jubel: ["🎄", "🎁", "⭐", "🔔"],
+  },
+  nikolaus: {
+    name: "Nikolaus", hintergrund: "#8e2b2b", rutsche: "gelb", gras: [],
+    deko: [["👢", 1780, 180, 140], ["🍊", 1480, 120, 80], ["🥜", 1320, 200, 60], ["🍫", 560, 1010, 80]],
+    verkleidung: { zeichen: "👢", ort: "hand" }, jubel: ["🍊", "🍫", "🥜", "⭐"],
+  },
+  sanktmartin: {
+    name: "Sankt Martin", hintergrund: "#2c3e66", rutsche: "gelb", gras: [],
+    deko: [["🌙", 1780, 140, 130], ["🏮", 1480, 150, 100], ["⭐", 1320, 90, 60], ["🐴", 560, 1010, 90]],
+    verkleidung: { zeichen: "🏮", ort: "hand" }, jubel: ["🏮", "🌙", "⭐", "🥨"],
+  },
+  advent: {
+    name: "Advent", hintergrund: "#2f4f4f", rutsche: "rot", gras: [],
+    deko: [["🕯️", 1700, 170, 120], ["🕯️", 1830, 200, 90], ["⭐", 1460, 110, 70], ["🍪", 560, 1010, 80]],
+    verkleidung: { zeichen: "🕯️", ort: "hand" }, jubel: ["🕯️", "⭐", "🍪", "🎄"],
+  },
+  bauernhof: {
+    name: "Bauernhof", hintergrund: "#cfe7a6", rutsche: "rot", gras: [[0, 900, 420], [1450, 30, 330]],
+    deko: [["🐄", 1780, 230, 140], ["🐔", 1300, 130, 80], ["🚜", 560, 1000, 100]],
+    verkleidung: { zeichen: "👒", ort: "kopf" }, jubel: ["🐄", "🐷", "🐔", "🐑"],
+  },
+  schule: {
+    name: "Schule", hintergrund: "#f5f0dc", rutsche: "gelb", gras: [[0, 900, 420]],
+    deko: [["🏫", 1780, 190, 150], ["🔤", 1480, 120, 80], ["📐", 1320, 210, 60], ["🎨", 560, 1010, 80]],
+    verkleidung: { zeichen: "🎒", ort: "hand" }, jubel: ["🏫", "🔤", "🎨", "🎉"],
+  },
+  sport: {
+    name: "Sport", hintergrund: "#cde8f2", rutsche: "rot", gras: [[0, 900, 420]],
+    deko: [["⚽", 1780, 170, 110], ["🏀", 1520, 120, 80], ["🏃", 1320, 210, 80], ["🥇", 560, 1010, 80]],
+    verkleidung: { zeichen: "🧢", ort: "kopf" }, jubel: ["🥇", "⚽", "🏀", "🏆"],
   },
 };
 
@@ -110,7 +173,7 @@ const farbe = einheit => VOKALE.has(einheit.toLowerCase()) ? FARBE_VOKAL : FARBE
 /* Übung <-> Link (der Teil nach dem #)
    Beispiel: v=1&t=herbst&p=0.5&s=Mo,La&w=Lama,Oma,Igel:🦔,am:
    "Wort" = Bild-Vorschlag, "Wort:X" = eigenes Bild X, "Wort:" = kein Bild */
-const VERSION = 1;
+const VERSION = 2;
 function zuLink(d) {
   const kodiere = t => encodeURIComponent(t).replace(/%2C/g, ",").replace(/%3A/g, ":");
   const woerter = d.woerter.map(({ w, bild }) => {
@@ -151,7 +214,7 @@ const BILD = {
 };
 
 /* Die Übung (vom Erstell-Werkzeug eingesetzt) */
-const UEBUNG = null;
+const UEBUNG = /*@UEBUNG@*/null;
 
 /* =========================================================
    Einstellungen
@@ -279,7 +342,7 @@ function toniZeichnen(eltern, x, y, b, h, thema) {
   const g = el("g", {}, eltern);
   el("image", { href: BILD.toni, x, y, width: b, height: h }, g);
   const v = thema.verkleidung;
-  if (v) emoji(v.zeichen, x + v.x * b, y + v.y * h, v.groesse * b, g);
+  if (v) { const o = ORTE[v.ort]; emoji(v.zeichen, x + o.x * b, y + o.y * h, o.groesse * b, g); }
   return g;
 }
 
@@ -334,8 +397,31 @@ function szeneZeichnen(sz) {
   sz.ziele = ziele.map(z => ({ ...z, pfad: glatterPfad([[START.x, START.y], ...rutsche, [z.x, L.grund]]) }));
   sz.ebene = el("g", {}, svg);
   sz.endEbene = el("g", {}, svg);
-  sz.hinweis = el("text", { x: START.x, y: START.y - 40, "font-size": 90, "text-anchor": "middle", class: "tippen-hinweis" }, sz.endEbene);
-  sz.hinweis.textContent = "👆";
+  lesenSymbol();
+
+  // Start-Knopf: weißer Kreis mit dunklem Rand und grünem Dreieck – auf jedem Hintergrund gut sichtbar
+  sz.hinweis = el("g", { class: "knopf pochen" }, sz.endEbene);
+  el("circle", { cx: START.x + 20, cy: 290, r: 72, fill: "#fff", stroke: "#222", "stroke-width": 6 }, sz.hinweis);
+  el("polygon", { points: `${START.x - 2},${250} ${START.x - 2},${330} ${START.x + 60},${290}`, fill: "#2f7d32", "stroke-linejoin": "round", stroke: "#2f7d32", "stroke-width": 8 }, sz.hinweis);
+}
+
+/* Lesen-Symbol über Toni: Buch mit Lesebrille (Klassen-Symbol fürs Lesen) */
+function lesenSymbol() {
+  const cx = TONI.x + TONI.b / 2, cy = 70;
+  el("circle", { cx, cy, r: 62, fill: "#fff", stroke: "#222", "stroke-width": 5 }, svg);
+  emoji("📖", cx, cy + 12, 70, svg);
+  emoji("👓", cx, cy - 22, 50, svg);
+}
+
+/* Weiter-Knopf: Stift + Pfeil = „ins Heft schreiben, dann weiter“ (bei Silben nur Pfeil) */
+function weiterKnopf(eltern, mitStift) {
+  const g = el("g", { class: "knopf pochen" }, eltern);
+  const x = 1620, y = 545, b = 260, h = 150;
+  el("rect", { x, y, width: b, height: h, rx: h / 2, fill: "#fff", stroke: "#2f7d32", "stroke-width": 8 }, g);
+  const pfeilX = mitStift ? x + 150 : x + 95;
+  el("path", { d: `M${pfeilX},${y + 75} h55 m-28,-32 l32,32 l-32,32`, fill: "none", stroke: "#2f7d32", "stroke-width": 16, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
+  if (mitStift) emoji("✏️", x + 82, y + 78, 90, g);
+  g.addEventListener("click", e => { e.stopPropagation(); naechste(); });
 }
 
 async function eintragStarten() {
@@ -368,12 +454,14 @@ async function eintragStarten() {
     t.setAttribute("transform", `translate(${z.x},${sz.L.grund})`);
   }
 
-  if (sz.art === "wort") wortEnde(sz);
+  wortEnde(sz);
   zustand = "fertig";
 }
 
-/* Spezifikation A7: Bild zum Wort + Toni mit Stift */
+/* Spezifikation A7: Bild zum Wort + Toni mit Stift + Weiter-Knopf zum Bestätigen */
 function wortEnde(sz) {
+  if (sz.art === "silbe") return weiterKnopf(sz.endEbene, false);
+  weiterKnopf(sz.endEbene, true);
   if (sz.bild) {
     const b = emoji(sz.bild, 1420, 400, 280, sz.endEbene, { opacity: 0 });
     animiere(400, p => b.setAttribute("opacity", p), lauf);
@@ -390,32 +478,55 @@ function abschlussZeichnen() {
 
   const woerter = daten.woerter.map(x => x.w);
   const n = woerter.length;
-  const groesse = n > 12 ? 82 : 95;
-  woerter.forEach((w, i) => {
-    const winkel = -Math.PI / 2 + (i / n) * 2 * Math.PI;
-    const t = el("text", {
-      x: 960 + Math.cos(winkel) * 690, y: 540 + Math.sin(winkel) * 390 + groesse * 0.3,
-      "font-size": groesse, "font-family": SCHRIFT, "text-anchor": "middle", class: "buchstabe",
-    }, svg);
+  const wortSchreiben = (w, x, y, groesse, maxBreite) => {
+    const g = Math.min(groesse, groesse * maxBreite / breite(w, groesse));
+    const t = el("text", { x, y: y + g * 0.3, "font-size": g, "font-family": SCHRIFT, "text-anchor": "middle", class: "buchstabe" }, svg);
     for (const e of zerlegen(w)) el("tspan", { fill: farbe(e) }, t).textContent = e;
-  });
+  };
+  if (n <= 14) {
+    // bis 14 Wörter: im Kreis um Toni
+    const groesse = n > 10 ? 82 : 95;
+    woerter.forEach((w, i) => {
+      const winkel = -Math.PI / 2 + (i / n) * 2 * Math.PI;
+      wortSchreiben(w, 960 + Math.cos(winkel) * 690, 540 + Math.sin(winkel) * 390, groesse, 420);
+    });
+  } else {
+    // mehr Wörter: je zwei Spalten links und rechts von Toni
+    const spalten = [190, 545, 1375, 1730];
+    const zeilenZahl = Math.ceil(n / 4);
+    const abstand = Math.min(130, 960 / zeilenZahl);
+    woerter.forEach((w, i) => {
+      const spalte = Math.floor(i / zeilenZahl), zeile = i % zeilenZahl;
+      wortSchreiben(w, spalten[spalte], 60 + abstand * (zeile + 0.5), Math.min(78, abstand * 0.7), 330);
+    });
+  }
   thema.jubel.forEach((z, i) =>
-    emoji(z, 960 + (i % 2 ? 1 : -1) * 250, 400 + 200 * Math.floor(i / 2), 80, svg, { class: "wackeln" }));
+    emoji(z, 960 + (i % 2 ? 1 : -1) * 330, 400 + 200 * Math.floor(i / 2), 80, svg, { class: "wackeln" }));
 }
 
-/* Bedienung */
-function weiter() {
-  if (zustand === "laeuft") return;
-  if (zustand === "bereit") return eintragStarten();
-  if (index < szenen.length - 1) { index++; szeneZeigen(true); }
+/* Bedienung: Tippen startet; weiter geht es nur über den Weiter-Knopf (nach dem Abschreiben) */
+function naechste() {
+  if (zustand !== "fertig" || index >= szenen.length - 1) return;
+  index++;
+  szeneZeigen(true);
 }
-svg.addEventListener("click", weiter);
+function weiter() {
+  if (zustand === "bereit") return eintragStarten();
+  naechste();
+}
+svg.addEventListener("click", () => { if (zustand === "bereit") eintragStarten(); });
+
+/* Steuerung aus der Vorschau des Erstell-Werkzeugs */
+window.addEventListener("message", e => {
+  const befehl = e.data && e.data.leserutsche;
+  if (befehl === "weiter" && index < szenen.length - 1) { index++; szeneZeigen(true); }
+  if (befehl === "ende") { index = szenen.length - 1; szeneZeigen(false); }
+});
 window.addEventListener("hashchange", () => location.reload());   // neuer QR-Code im selben Tab
 document.addEventListener("keydown", e => {
   if (e.key === " " || e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); weiter(); }
-  if (e.key === "ArrowLeft") $("b-zurueck").click();
+  if (e.key === "ArrowLeft" && index > 0) { index--; szeneZeigen(false); }
 });
-$("b-zurueck").addEventListener("click", () => { if (index > 0) index--; szeneZeigen(false); });
 $("b-wieder").addEventListener("click", () => szeneZeigen(szenen[index].art !== "abschluss"));
 $("b-vollbild").addEventListener("click", () => {
   const z = document.documentElement;
